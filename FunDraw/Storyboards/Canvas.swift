@@ -10,9 +10,20 @@ import UIKit
 
 class Canvas: UIView {
     
-    var lines = [[CGPoint]]()
+    fileprivate var lines = [Line]()
     
-    // public function
+    // public functions
+    fileprivate var strokeColor = UIColor.black
+    fileprivate var strokeWidth: Float = 1
+    
+    func setStrokeWidth(width: Float) {
+        self.strokeWidth = width
+    }
+    
+    func setStrokeColor(color: UIColor) {
+        self.strokeColor = color
+    }
+    
     func undo() {
         _ = lines.popLast()
         setNeedsDisplay()
@@ -38,30 +49,26 @@ class Canvas: UIView {
         //        context.move(to: startPoint)
         //        context.addLine(to: endPoint)
         
-        context.setStrokeColor(UIColor.red.cgColor)
-        context.setLineWidth(10)
-        context.setLineCap(.butt)
-        
         lines.forEach { (line) in
-            
-            for (i, p) in line.enumerated() {
-                
+            context.setStrokeColor(line.color.cgColor)
+            context.setLineWidth(CGFloat(line.strokeWidth ))
+            context.setLineCap(.round)
+            for (i, p) in line.points.enumerated() {
                 if i == 0 {
                     context.move(to: p)
                 } else {
                     context.addLine(to: p)
                 }
             }
+            context.strokePath()
         }
-        
-        context.strokePath()
     }
     
     // let's ditch this line
     //    var line = [CGPoint]()
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        lines.append([CGPoint]())
+        lines.append(Line.init(color: strokeColor, strokeWidth: strokeWidth, points: []))
     }
     
     // track finger as it moves across screen
@@ -71,7 +78,7 @@ class Canvas: UIView {
         
         // To make sure that the last line gets properly added
         guard var lastLine = lines.popLast() else { return }
-        lastLine.append(point)
+        lastLine.points.append(point)
         lines.append(lastLine)
         
         //        var lastLine = lines.last
